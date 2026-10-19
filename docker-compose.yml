@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: sami_cafe_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_DB: sami_cafe
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./server/src/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./server/src/db/seeds/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
+
+  server:
+    build: ./server
+    container_name: sami_cafe_server
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      DATABASE_URL: postgresql://postgres:postgrespassword@postgres:5432/sami_cafe
+      JWT_SECRET: sami_cafe_super_secret_jwt_key_2026_secured_token_value!
+      CLIENT_URL: http://localhost:5173
+    depends_on:
+      - postgres
+
+  client:
+    build: ./client
+    container_name: sami_cafe_client
+    restart: always
+    ports:
+      - "5173:80"
+    depends_on:
+      - server
+
+volumes:
+  postgres_data:

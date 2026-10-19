@@ -1,0 +1,52 @@
+{
+  "info": {
+    "name": "Sami Cafe and Restaurant REST API",
+    "description": "Complete REST API collection for Sami Cafe and Restaurant with Authentication, Menu, Orders, Tables, Reservations, POS Billing, Inventory and Reports.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        { "name": "Login", "request": { "method": "POST", "url": "{{baseUrl}}/auth/login", "body": { "mode": "raw", "raw": "{\"email\":\"admin@samicafe.com\",\"password\":\"password123\"}" } } },
+        { "name": "Register", "request": { "method": "POST", "url": "{{baseUrl}}/auth/register", "body": { "mode": "raw", "raw": "{\"fullName\":\"New Customer\",\"email\":\"user@example.com\",\"password\":\"password123\"}" } } },
+        { "name": "Get Profile", "request": { "method": "GET", "url": "{{baseUrl}}/auth/me" } }
+      ]
+    },
+    {
+      "name": "Menu & Categories",
+      "item": [
+        { "name": "Get Categories", "request": { "method": "GET", "url": "{{baseUrl}}/categories" } },
+        { "name": "Get Menu Items", "request": { "method": "GET", "url": "{{baseUrl}}/menu?categoryId=&q=&vegetarian=&fasting=" } },
+        { "name": "Get Dish By ID", "request": { "method": "GET", "url": "{{baseUrl}}/menu/9" } }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        { "name": "Create Order", "request": { "method": "POST", "url": "{{baseUrl}}/orders", "body": { "mode": "raw", "raw": "{\"items\":[{\"menu_item_id\":9,\"quantity\":1}],\"orderType\":\"dine_in\",\"tableId\":3}" } } },
+        { "name": "Get All Orders", "request": { "method": "GET", "url": "{{baseUrl}}/orders" } },
+        { "name": "Update Order Status", "request": { "method": "PATCH", "url": "{{baseUrl}}/orders/1/status", "body": { "mode": "raw", "raw": "{\"status\":\"ready\"}" } } }
+      ]
+    },
+    {
+      "name": "Tables & Reservations",
+      "item": [
+        { "name": "Check Availability", "request": { "method": "GET", "url": "{{baseUrl}}/reservations/availability?date=2026-10-18&time=19:00:00&guests=4" } },
+        { "name": "Create Reservation", "request": { "method": "POST", "url": "{{baseUrl}}/reservations", "body": { "mode": "raw", "raw": "{\"guestName\":\"Kidus Merawi\",\"phone\":\"+251911223344\",\"reservationDate\":\"2026-10-18\",\"startTime\":\"19:00:00\",\"guests\":4}" } } },
+        { "name": "Get Tables", "request": { "method": "GET", "url": "{{baseUrl}}/tables" } }
+      ]
+    },
+    {
+      "name": "Reports & Analytics",
+      "item": [
+        { "name": "Dashboard Summary", "request": { "method": "GET", "url": "{{baseUrl}}/reports/summary" } },
+        { "name": "Sales Trends", "request": { "method": "GET", "url": "{{baseUrl}}/reports/sales?period=week" } },
+        { "name": "Top Selling Dishes", "request": { "method": "GET", "url": "{{baseUrl}}/reports/top-items" } }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000/api/v1" }
+  ]
+}
