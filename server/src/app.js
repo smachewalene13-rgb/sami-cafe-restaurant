@@ -51,12 +51,35 @@ app.use(morgan('dev'));
 // Static uploads directory
 app.use('/uploads', express.static(path.resolve('uploads')));
 
-// Health check endpoint
-app.get('/api/health', (req, res) => {
+// Health check endpoint with database status
+app.get('/api/health', async (req, res) => {
+  let dbStatus = 'disconnected';
+  let menuCount = 0;
+  let categoryCount = 0;
+
+  try {
+    const { pool } = await import('./config/db.js');
+    await pool.query('SELECT 1');
+    dbStatus = 'connected';
+
+    const menuRes = await pool.query('SELECT count(*)::int as count FROM menu_items').catch(() => ({ rows: [{ count: 0 }] }));
+    const catRes = await pool.query('SELECT count(*)::int as count FROM categories').catch(() => ({ rows: [{ count: 0 }] }));
+    menuCount = menuRes.rows[0].count;
+    categoryCount = catRes.rows[0].count;
+  } catch (err) {
+    dbStatus = `error: ${err.message}`;
+  }
+
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
-    service: 'Sami Cafe and Restaurant API'
+    service: 'Sami Cafe and Restaurant API',
+    database: dbStatus,
+    dataSummary: {
+      categories: categoryCount,
+      menuItems: menuCount,
+      seeded: menuCount > 0
+    }
   });
 });
 

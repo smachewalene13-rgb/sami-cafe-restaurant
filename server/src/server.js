@@ -14,8 +14,17 @@ initSocket(server, process.env.CLIENT_URL || 'http://localhost:5173');
 // Start background cron jobs
 startLowStockCronJob();
 
-// Verify Database Connection and start server
-async function startServer() {
+// 1. Start HTTP Server immediately so cloud platforms (Render) bind the port instantly
+server.listen(PORT, () => {
+  console.log(`===================================================`);
+  console.log(`🚀 Sami Cafe & Restaurant Server running on port ${PORT}`);
+  console.log(`📡 REST API endpoint: http://localhost:${PORT}/api/v1`);
+  console.log(`⚡ Socket.IO listening for live updates`);
+  console.log(`===================================================`);
+});
+
+// 2. Verify Database Connection asynchronously without blocking server startup
+async function verifyDatabase() {
   try {
     if (!process.env.DATABASE_URL) {
       console.warn('⚠️ WARNING: DATABASE_URL is not set! Using default local PostgreSQL URL.');
@@ -25,22 +34,13 @@ async function startServer() {
     }
 
     const res = await pool.query('SELECT NOW() as current_time, current_database() as db');
-    console.log(`[DB Connected] Connected to PostgreSQL '${res.rows[0].db}' at ${res.rows[0].current_time}`);
-
-    server.listen(PORT, () => {
-      console.log(`===================================================`);
-      console.log(`🚀 Sami Cafe & Restaurant Server running on port ${PORT}`);
-      console.log(`📡 REST API endpoint: http://localhost:${PORT}/api/v1`);
-      console.log(`⚡ Socket.IO listening for live updates`);
-      console.log(`===================================================`);
-    });
+    console.log(`✅ [DB Connected] Connected to PostgreSQL '${res.rows[0].db}' at ${res.rows[0].current_time}`);
   } catch (err) {
     console.error('❌ Failed to connect to PostgreSQL database:', err?.message || err);
     if (!process.env.DATABASE_URL) {
       console.error('👉 TIP: Please set the DATABASE_URL environment variable in your Render service settings!');
     }
-    process.exit(1);
   }
 }
 
-startServer();
+verifyDatabase();

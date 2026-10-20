@@ -9,6 +9,7 @@ const isLocal = connectionString.includes('localhost') || connectionString.inclu
 export const pool = new Pool({
   connectionString,
   ssl: isLocal ? false : { rejectUnauthorized: false },
+  connectionTimeoutMillis: 10000, // Never hang infinitely: timeout after 10s
 });
 
 pool.on('error', (err) => {
