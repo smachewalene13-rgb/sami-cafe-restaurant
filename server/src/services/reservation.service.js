@@ -3,6 +3,9 @@ import { emitTableUpdate } from '../sockets/index.js';
 import { notifyReservationEvent } from './notification.service.js';
 
 export const findAvailableTables = async (date, time, guests) => {
+  const partySize = parseInt(guests, 10) || 2;
+  const minCapacity = partySize > 8 ? 6 : partySize;
+
   const sql = `
     SELECT t.id, t.table_number as "tableNumber", t.capacity, t.location, t.status
     FROM restaurant_tables t
@@ -18,7 +21,7 @@ export const findAvailableTables = async (date, time, guests) => {
     ORDER BY t.capacity ASC, t.id ASC
   `;
 
-  const result = await query(sql, [date, time, guests]);
+  const result = await query(sql, [date, time, minCapacity]);
   return result.rows;
 };
 

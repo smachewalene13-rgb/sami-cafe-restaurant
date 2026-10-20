@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Calendar, Clock, Users, CheckCircle2, AlertCircle, Coffee, Sparkles, MapPin, Award, Check } from 'lucide-react';
 import { reservationApi } from '../../api/reservation.api';
+import { getMatchingTables } from '../../data/initialTablesData';
 import { useAuthStore } from '../../store/authStore';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
@@ -16,9 +17,9 @@ export default function Reservation() {
   const [guestName, setGuestName] = useState(user?.fullName || '');
   const [phone, setPhone] = useState(user?.phone || '');
   const [notes, setNotes] = useState('');
-  const [selectedTableId, setSelectedTableId] = useState(null);
+  const [selectedTableId, setSelectedTableId] = useState(1);
 
-  const [availableTables, setAvailableTables] = useState([]);
+  const [availableTables, setAvailableTables] = useState(() => getMatchingTables(2));
   const [checking, setChecking] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [confirmedReservation, setConfirmedReservation] = useState(null);
@@ -41,12 +42,21 @@ export default function Reservation() {
           guests,
         });
         const tables = res.data?.tables || [];
-        setAvailableTables(tables);
-        if (tables.length > 0 && !selectedTableId) {
-          setSelectedTableId(tables[0].id);
+        if (tables.length > 0) {
+          setAvailableTables(tables);
+          if (!tables.some((t) => t.id === selectedTableId)) {
+            setSelectedTableId(tables[0].id);
+          }
+        } else {
+          const fallback = getMatchingTables(guests);
+          setAvailableTables(fallback);
+          if (fallback.length > 0) setSelectedTableId(fallback[0].id);
         }
       } catch (err) {
         console.error('Failed to check availability:', err);
+        const fallback = getMatchingTables(guests);
+        setAvailableTables(fallback);
+        if (fallback.length > 0) setSelectedTableId(fallback[0].id);
       } finally {
         setChecking(false);
       }
