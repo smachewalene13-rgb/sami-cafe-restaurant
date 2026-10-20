@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Search, Filter, Leaf, Sparkles, X, Coffee, ArrowRight, ShoppingBag } from 'lucide-react';
 import { menuApi } from '../../api/menu.api';
+import { INITIAL_CATEGORIES, INITIAL_MENU_ITEMS } from '../../data/initialMenuData';
 import MenuCard from '../../components/menu/MenuCard';
 import ItemModal from '../../components/menu/ItemModal';
 import Loader from '../../components/common/Loader';
@@ -14,15 +15,15 @@ export default function Menu() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialCategory = searchParams.get('category') || '';
 
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState(INITIAL_CATEGORIES);
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [searchQuery, setSearchQuery] = useState('');
   const [onlyVegetarian, setOnlyVegetarian] = useState(false);
   const [onlyFasting, setOnlyFasting] = useState(false);
   const [sortBy, setSortBy] = useState('default');
 
-  const [menuItems, setMenuItems] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [menuItems, setMenuItems] = useState(INITIAL_MENU_ITEMS);
+  const [loading, setLoading] = useState(false);
   const [activeItemModal, setActiveItemModal] = useState(null);
 
   const { addItem, getTotalItemCount, getTotal, openDrawer } = useCartStore();
@@ -30,17 +31,18 @@ export default function Menu() {
 
   const totalItemsCount = getTotalItemCount();
 
-  // Load categories
+  // Load categories from API (fallback to initial if network slow)
   useEffect(() => {
     menuApi.getCategories().then((res) => {
-      setCategories(res.data || []);
+      if (res.data && res.data.length > 0) {
+        setCategories(res.data);
+      }
     }).catch(console.error);
   }, []);
 
-  // Fetch menu items
+  // Fetch menu items from API or filter local items seamlessly
   useEffect(() => {
     let isCancelled = false;
-    setLoading(true);
 
     const params = {
       categoryId: selectedCategory || undefined,
@@ -53,11 +55,56 @@ export default function Menu() {
 
     menuApi.getMenuItems(params)
       .then((res) => {
-        if (!isCancelled) {
-          setMenuItems(res.data?.items || []);
+        if (!isCancelled && res.data?.items && res.data.items.length > 0) {
+          setMenuItems(res.data.items);
+        } else if (!isCancelled) {
+          // Filter local INITIAL_MENU_ITEMS fallback
+          let filtered = [...INITIAL_MENU_ITEMS];
+          if (selectedCategory) {
+            filtered = filtered.filter(item => String(item.category_id) === String(selectedCategory));
+          }
+          if (searchQuery) {
+            const q = searchQuery.toLowerCase();
+            filtered = filtered.filter(item => item.name.toLowerCase().includes(q) || item.description?.toLowerCase().includes(q));
+          }
+          if (onlyVegetarian) {
+            filtered = filtered.filter(item => item.is_vegetarian);
+          }
+          if (onlyFasting) {
+            filtered = filtered.filter(item => item.is_fasting);
+          }
+          if (sortBy === 'price_asc') {
+            filtered.sort((a, b) => a.price - b.price);
+          } else if (sortBy === 'price_desc') {
+            filtered.sort((a, b) => b.price - a.price);
+          }
+          setMenuItems(filtered);
         }
       })
-      .catch((err) => console.error('Menu load error:', err))
+      .catch((err) => {
+        console.error('Live API fetch error, using instant local menu items:', err);
+        // Fallback filter
+        let filtered = [...INITIAL_MENU_ITEMS];
+        if (selectedCategory) {
+          filtered = filtered.filter(item => String(item.category_id) === String(selectedCategory));
+        }
+        if (searchQuery) {
+          const q = searchQuery.toLowerCase();
+          filtered = filtered.filter(item => item.name.toLowerCase().includes(q) || item.description?.toLowerCase().includes(q));
+        }
+        if (onlyVegetarian) {
+          filtered = filtered.filter(item => item.is_vegetarian);
+        }
+        if (onlyFasting) {
+          filtered = filtered.filter(item => item.is_fasting);
+        }
+        if (sortBy === 'price_asc') {
+          filtered.sort((a, b) => a.price - b.price);
+        } else if (sortBy === 'price_desc') {
+          filtered.sort((a, b) => b.price - a.price);
+        }
+        setMenuItems(filtered);
+      })
       .finally(() => {
         if (!isCancelled) setLoading(false);
       });

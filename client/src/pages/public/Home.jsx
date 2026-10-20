@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { menuApi } from '../../api/menu.api';
+import { INITIAL_CATEGORIES, INITIAL_MENU_ITEMS } from '../../data/initialMenuData';
 import MenuCard from '../../components/menu/MenuCard';
 import ItemModal from '../../components/menu/ItemModal';
 import Button from '../../components/common/Button';
@@ -10,9 +11,9 @@ import { useLangStore } from '../../store/langStore';
 import toast from 'react-hot-toast';
 
 export default function Home() {
-  const [specials, setSpecials] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [specials, setSpecials] = useState(INITIAL_MENU_ITEMS.slice(0, 8));
+  const [categories, setCategories] = useState(INITIAL_CATEGORIES);
+  const [loading, setLoading] = useState(false);
   const [activeItemModal, setActiveItemModal] = useState(null);
 
   const { addItem } = useCartStore();
@@ -26,10 +27,14 @@ export default function Home() {
           menuApi.getCategories(),
           menuApi.getMenuItems({ limit: 8 }),
         ]);
-        setCategories(catsRes.data || []);
-        setSpecials(menuRes.data?.items || []);
+        if (catsRes.data && catsRes.data.length > 0) {
+          setCategories(catsRes.data);
+        }
+        if (menuRes.data?.items && menuRes.data.items.length > 0) {
+          setSpecials(menuRes.data.items);
+        }
       } catch (err) {
-        console.error('Failed to load home data:', err);
+        console.warn('API sync warning (using instant initial menu items):', err.message);
       } finally {
         setLoading(false);
       }
