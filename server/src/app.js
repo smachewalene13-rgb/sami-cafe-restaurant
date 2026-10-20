@@ -9,6 +9,9 @@ import { limiter } from './middleware/rateLimiter.js';
 
 const app = express();
 
+// Trust reverse proxy (Render, Cloudflare, Vercel)
+app.set('trust proxy', 1);
+
 // Security headers with cross-origin resource policy for uploaded images
 app.use(
   helmet({
@@ -29,8 +32,8 @@ app.use(
   cors({
     origin: (origin, callback) => {
       // allow requests with no origin (like mobile apps, curl, or postman)
+      if (!origin) return callback(null, true);
       if (
-        !origin ||
         allowedOrigins.includes(origin) ||
         origin.endsWith('.vercel.app') ||
         origin.startsWith('http://localhost:') ||
@@ -38,11 +41,16 @@ app.use(
       ) {
         return callback(null, true);
       }
-      return callback(null, true); // Fallback for preview deployments
+      return callback(null, true); // Fallback for all preview & production deployments
     },
-    credentials: true
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
   })
 );
+
+// Explicit preflight handler for all routes
+app.options('*', cors());
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
