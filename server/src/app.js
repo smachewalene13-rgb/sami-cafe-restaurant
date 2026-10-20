@@ -51,6 +51,24 @@ app.use(morgan('dev'));
 // Static uploads directory
 app.use('/uploads', express.static(path.resolve('uploads')));
 
+// Root landing endpoint for backend API
+app.get('/', (req, res) => {
+  res.json({
+    name: 'Sami Cafe and Restaurant API',
+    status: 'online',
+    version: '1.0.0',
+    health: '/api/health',
+    endpoints: {
+      categories: '/api/v1/categories',
+      menu: '/api/v1/menu',
+      tables: '/api/v1/tables',
+      orders: '/api/v1/orders',
+      reservations: '/api/v1/reservations',
+    },
+    frontend: process.env.CLIENT_URL || 'https://sami-cafe-restaurant.vercel.app'
+  });
+});
+
 // Health check endpoint with database status
 app.get('/api/health', async (req, res) => {
   let dbStatus = 'disconnected';
