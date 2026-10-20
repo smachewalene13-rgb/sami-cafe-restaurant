@@ -5,7 +5,20 @@ let ioInstance = null;
 export const initSocket = (server, corsOrigin = '*') => {
   ioInstance = new Server(server, {
     cors: {
-      origin: corsOrigin,
+      origin: (origin, callback) => {
+        // Allow mobile apps, curl, or server-to-server with no origin
+        if (!origin) return callback(null, true);
+        if (
+          corsOrigin === '*' ||
+          origin === corsOrigin ||
+          origin.endsWith('.vercel.app') ||
+          origin.startsWith('http://localhost:') ||
+          origin.startsWith('http://127.0.0.1:')
+        ) {
+          return callback(null, true);
+        }
+        return callback(null, true); // Dev & flexible production fallback
+      },
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
       credentials: true
     }
