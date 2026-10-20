@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Grid, Users, RefreshCw, Plus, Check, Clock, Sparkles, UtensilsCrossed, ShieldAlert, Coffee, MapPin, Eye } from 'lucide-react';
 import { reservationApi } from '../../api/reservation.api';
+import { DEFAULT_TABLES } from '../../data/initialTablesData';
 import { useSocket } from '../../hooks/useSocket';
 import Button from '../../components/common/Button';
 import Loader from '../../components/common/Loader';
@@ -10,8 +11,8 @@ import { TABLE_STATUSES } from '../../utils/constants';
 import toast from 'react-hot-toast';
 
 export default function TablesFloor() {
-  const [tables, setTables] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [tables, setTables] = useState(DEFAULT_TABLES);
+  const [loading, setLoading] = useState(false);
   const [selectedTable, setSelectedTable] = useState(null);
   const [zoneFilter, setZoneFilter] = useState('all');
   const navigate = useNavigate();
@@ -19,11 +20,11 @@ export default function TablesFloor() {
   const fetchTables = async () => {
     try {
       const res = await reservationApi.getTables();
-      setTables(res.data || []);
+      if (res?.data && res.data.length > 0) {
+        setTables(res.data);
+      }
     } catch (err) {
-      console.error('Failed to load tables:', err);
-    } finally {
-      setLoading(false);
+      console.warn('Live tables fetch warning:', err);
     }
   };
 

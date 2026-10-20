@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Grid, Users, Sparkles, MapPin } from 'lucide-react';
 import { adminApi } from '../../api/admin.api';
 import { reservationApi } from '../../api/reservation.api';
+import { DEFAULT_TABLES } from '../../data/initialTablesData';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import Modal from '../../components/common/Modal';
@@ -10,8 +11,8 @@ import { TABLE_STATUSES } from '../../utils/constants';
 import toast from 'react-hot-toast';
 
 export default function ManageTables() {
-  const [tables, setTables] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [tables, setTables] = useState(DEFAULT_TABLES);
+  const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTable, setEditingTable] = useState(null);
 
@@ -24,11 +25,11 @@ export default function ManageTables() {
   const loadTables = async () => {
     try {
       const res = await reservationApi.getTables();
-      setTables(res.data || []);
+      if (res?.data && res.data.length > 0) {
+        setTables(res.data);
+      }
     } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+      console.warn('Live tables fetch warning:', err);
     }
   };
 

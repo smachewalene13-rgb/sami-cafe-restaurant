@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Layers, Image as ImageIcon, Sparkles } from 'lucide-react';
 import { adminApi } from '../../api/admin.api';
+import { INITIAL_CATEGORIES } from '../../data/initialMenuData';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import Modal from '../../components/common/Modal';
@@ -8,8 +9,8 @@ import Loader from '../../components/common/Loader';
 import toast from 'react-hot-toast';
 
 export default function ManageCategories() {
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState(INITIAL_CATEGORIES);
+  const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCat, setEditingCat] = useState(null);
 
@@ -23,11 +24,11 @@ export default function ManageCategories() {
   const loadCategories = async () => {
     try {
       const res = await adminApi.getAllCategories();
-      setCategories(res.data || []);
+      if (res?.data && res.data.length > 0) {
+        setCategories(res.data);
+      }
     } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+      console.warn('Live categories fetch warning:', err);
     }
   };
 

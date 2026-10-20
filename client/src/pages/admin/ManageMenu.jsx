@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Search, Check, X, Coffee, Sparkles, Image as ImageIcon, Clock, AlertCircle } from 'lucide-react';
 import { adminApi } from '../../api/admin.api';
 import { menuApi } from '../../api/menu.api';
+import { INITIAL_CATEGORIES, INITIAL_MENU_ITEMS } from '../../data/initialMenuData';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import Modal from '../../components/common/Modal';
@@ -10,9 +11,9 @@ import { formatCurrency } from '../../utils/formatCurrency';
 import toast from 'react-hot-toast';
 
 export default function ManageMenu() {
-  const [items, setItems] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [items, setItems] = useState(INITIAL_MENU_ITEMS);
+  const [categories, setCategories] = useState(INITIAL_CATEGORIES);
+  const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -36,12 +37,14 @@ export default function ManageMenu() {
         menuApi.getMenuItems({ limit: 100 }),
         menuApi.getCategories(),
       ]);
-      setItems(menuRes.data?.items || []);
-      setCategories(catRes.data || []);
+      if (menuRes?.data?.items && menuRes.data.items.length > 0) {
+        setItems(menuRes.data.items);
+      }
+      if (catRes?.data && catRes.data.length > 0) {
+        setCategories(catRes.data);
+      }
     } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+      console.warn('Live menu fetch warning:', err);
     }
   };
 
