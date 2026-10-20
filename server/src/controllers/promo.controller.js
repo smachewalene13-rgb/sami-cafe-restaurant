@@ -45,7 +45,7 @@ export const validatePromo = async (req, res) => {
 
 export const getAllPromos = async (req, res) => {
   try {
-    const result = await query('SELECT * FROM promo_codes ORDER BY created_at DESC');
+    const result = await query('SELECT * FROM promo_codes ORDER BY id DESC');
     return apiResponse(res, 200, 'Promo codes', result.rows);
   } catch (err) {
     return apiError(res, 500, err.message);
