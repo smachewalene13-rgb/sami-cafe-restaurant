@@ -22,6 +22,11 @@ export default function Menu() {
   const [onlyFasting, setOnlyFasting] = useState(false);
   const [sortBy, setSortBy] = useState('default');
 
+  // Synchronize category filter whenever URL parameters change
+  useEffect(() => {
+    setSelectedCategory(searchParams.get('category') || '');
+  }, [searchParams]);
+
   const [menuItems, setMenuItems] = useState(INITIAL_MENU_ITEMS);
   const [loading, setLoading] = useState(false);
   const [activeItemModal, setActiveItemModal] = useState(null);
