@@ -1,16 +1,27 @@
 import { useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 
+const PROD_SOCKET_URL = 'https://sami-cafe-restaurant-1.onrender.com';
+
 const getSocketUrl = () => {
-  if (import.meta.env.VITE_SOCKET_URL) {
-    return import.meta.env.VITE_SOCKET_URL;
-  }
+  // If running in browser and NOT running on localhost / 127.0.0.1
+  // ALWAYS route socket connections to the live production Render backend
   if (
     typeof window !== 'undefined' &&
     window.location.hostname !== 'localhost' &&
     window.location.hostname !== '127.0.0.1'
   ) {
-    return 'https://sami-cafe-restaurant-1.onrender.com';
+    const envUrl = import.meta.env.VITE_SOCKET_URL;
+    if (envUrl && envUrl.startsWith('https://') && !envUrl.includes('localhost')) {
+      return envUrl;
+    }
+    return PROD_SOCKET_URL;
+  }
+
+  // Local development
+  const envUrl = import.meta.env.VITE_SOCKET_URL;
+  if (envUrl && !envUrl.includes('10000') && !envUrl.includes('undefined')) {
+    return envUrl;
   }
   return 'http://localhost:5000';
 };

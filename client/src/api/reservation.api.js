@@ -1,5 +1,5 @@
 import api from './axios';
-import { getMatchingTables } from '../data/initialTablesData';
+import { DEFAULT_TABLES, getMatchingTables } from '../data/initialTablesData';
 
 export const reservationApi = {
   checkAvailability: async (params = {}) => {
@@ -20,6 +20,15 @@ export const reservationApi = {
   getMyReservations: () => api.get('/reservations/my'),
   getAllReservations: (params = {}) => api.get('/reservations', { params }),
   updateStatus: (id, status, tableId) => api.patch(`/reservations/${id}/status`, { status, tableId }),
-  getTables: () => api.get('/tables'),
+  getTables: async () => {
+    try {
+      const res = await api.get('/tables');
+      if (res?.data && res.data.length > 0) return res;
+      return { data: DEFAULT_TABLES };
+    } catch (err) {
+      console.warn('Live tables fetch warning, using default tables:', err.message);
+      return { data: DEFAULT_TABLES };
+    }
+  },
   updateTableStatus: (id, status) => api.patch(`/tables/${id}/status`, { status }),
 };
